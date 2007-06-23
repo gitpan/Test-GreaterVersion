@@ -1,0 +1,13 @@
+0.003
+-----
+Added more documentation, README and this file. Module
+should work on all OSs by the magic of Cwd and File::Spec.
+
+0.002
+-----
+Now compares against the CPAN version as well. Looked at
+CPAN.pm and gone blind ;)
+
+0.001
+-----
+First version. Compares development with installed version.
