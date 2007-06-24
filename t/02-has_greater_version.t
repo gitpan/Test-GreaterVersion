@@ -17,11 +17,11 @@ can_ok($module, 'has_greater_version');
     is($got, $expected,'no module name');
 }
 
-# name of non-existant module
+# name of non-existent module
 {
     my $expected=0;
     my $got=has_greater_version("I don't exist");
-    is($got, $expected, 'name of non-existant module');
+    is($got, $expected, 'name of non-existent module');
 }
 
 # name of module not in lib

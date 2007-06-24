@@ -39,7 +39,7 @@ use base qw(Exporter);
 our @EXPORT = qw(has_greater_version
   has_greater_version_than_cpan);
 
-our $VERSION = 0.003;
+our $VERSION = 0.004;
 
 our $Test = Test::Builder->new;
 
@@ -117,7 +117,8 @@ sub has_greater_version_than_cpan {
 =head2 _get_installed_version ($module)
 
 Gets the version of the installed module. Just calls eval()
-and tries to find the version afterwards.
+and tries to find the version afterwards. C<blib> is
+remove from @INC before including the module.
 
 Returns 0 if C<use> cannot find the module or it has no
 VERSION. Returns the version otherwise.
@@ -157,6 +158,8 @@ sub _get_installed_version {
 Gets the version of the module found in 'lib/'.
 Transforms the module name into a filename which points
 to a file found under 'lib/'.
+
+C<MM->parse_version()> tries to find the version.
 
 Returns 0 if the module could not be loaded or has no
 VERSION. Returns the version otherwise.
@@ -217,11 +220,6 @@ sub _get_version_from_cpan {
 	# there is a version on CPAN
 	return $m->cpan_version();
 }
-
-=head2 BUGS
-
-The double-colons are replaced by with slashes.
-This works only on UNI*-like systems.
 
 =head2 NOTES
 
