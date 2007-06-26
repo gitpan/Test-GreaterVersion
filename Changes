@@ -1,3 +1,10 @@
+0.005
+-----
+Version is now compared with the help of CPAN::Version.
+Version information is now always looked up with the help
+of CPAN or MakeMaker.
+Added test for POD to raise my kwalitee-rating ;)
+
 0.004
 -----
 Updated documentation.

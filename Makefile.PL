@@ -7,5 +7,6 @@ WriteMakefile(
 	PREREQ_PM    =>
 	  { Test::Builder => 0, CPAN => 0, File::Spec => 0 }    
 	,
+	LICENSE      => 'perl',
 	PREREQ_FATAL => 1
 );

@@ -32,6 +32,7 @@ use warnings;
 use ExtUtils::MakeMaker;
 use Test::Builder;
 use CPAN;
+use CPAN::Version;
 use File::Spec;
 use Cwd;
 
@@ -39,7 +40,7 @@ use base qw(Exporter);
 our @EXPORT = qw(has_greater_version
   has_greater_version_than_cpan);
 
-our $VERSION = 0.004;
+our $VERSION = 0.005;
 
 our $Test = Test::Builder->new;
 
@@ -79,7 +80,7 @@ sub has_greater_version {
 	}
 
 	$Test->ok(
-		$version_from_lib > $version_installed,
+		CPAN::Version->vgt($version_from_lib, $version_installed),
 		"$module has greater version"
 	);
 }
@@ -88,6 +89,12 @@ sub has_greater_version {
 
 Returns 1 if the version of your module in 'lib/' is greater
 than the version on CPAN, 0 otherwise.
+
+Due to the interface of the CPAN module there's currently
+no way to tell if the module is not on CPAN or if there
+has been an error in getting the module information from CPAN.
+As a result this function should only be called if you are
+sure that there's a version of the module on CPAN.
 
 =cut
 
@@ -109,18 +116,17 @@ sub has_greater_version_than_cpan {
 	}
 
 	$Test->ok(
-		$version_from_lib > $version_on_cpan,
+		CPAN::Version->vgt($version_from_lib, $version_on_cpan),
 		"$module has greater version than on CPAN"
 	);
 }
 
 =head2 _get_installed_version ($module)
 
-Gets the version of the installed module. Just calls eval()
-and tries to find the version afterwards. C<blib> is
-remove from @INC before including the module.
+Gets the version of the installed module. The version
+information is found with the help of the CPAN module.
 
-Returns 0 if C<use> cannot find the module or it has no
+Returns 0 if CPAN cannot find the module or it has no
 VERSION. Returns the version otherwise.
 
 =cut
@@ -132,25 +138,25 @@ sub _get_installed_version {
 	# localize @INC so we won't affect others
 	local @INC = grep { $_ !~ /blib/ } @INC;
 
-	# load module at runtime
-	eval "use $module";
+	# taken from CPAN manpage
+	my $m = CPAN::Shell->expand( 'Module', $module );
 
-	# fail on errors
-	return $Test->diag("Eval had errors: $@") if $@;
+	# the module is not on CPAN or something broke
+	return $Test->diag("CPAN-version of '$module' not available")
+	  unless $m;
 
-	# turn of warnings
-	no strict 'refs';
-
-	# fail if there's no version defined
-	unless ( defined ${"$module\::VERSION"} ) {
-		return $Test->diag('Scalar VERSION not found');
-	}
-
-	# get the version
-	return ${"$module\::VERSION"};
-
-	# turn on warnings again
-	use strict 'refs';
+    my $file = _module_to_file($module);
+    my $bestv;
+    for my $incdir (@INC) {
+        my $bfile = File::Spec->catfile($incdir, $file);
+        next unless -f $bfile;
+        my $foundv = MM->parse_version($bfile);
+        if (!$bestv || CPAN::Version->vgt($foundv,$bestv)) {
+            $bestv = $foundv;
+        }
+    }
+	# get installed version
+	return $m->inst_version();
 }
 
 =head2 _get_version_from_lib ($module)

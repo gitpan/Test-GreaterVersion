@@ -7,4 +7,6 @@ t/00-use.t
 t/01-can.t
 t/02-has_greater_version.t
 t/03-has_greater_version_than_cpan.t
+t/99-pod.t
+t/99-pod_coverage.t
 META.yml                                 Module meta-data (added by MakeMaker)
