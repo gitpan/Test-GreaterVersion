@@ -1,3 +1,10 @@
+0.007
+-----
+Added Cwd as a prerequisite to Makefile.PL.
+Teh description in the module list on CPAN, the abstract
+in the Makefile.PL and the one-line description in the POD
+are now the same.
+
 0.006
 -----
 Added CPAN::Version as a prerequisite to Makefile.PL

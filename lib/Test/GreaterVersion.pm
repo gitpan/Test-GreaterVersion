@@ -40,7 +40,7 @@ use base qw(Exporter);
 our @EXPORT = qw(has_greater_version
   has_greater_version_than_cpan);
 
-our $VERSION = 0.006;
+our $VERSION = 0.007;
 
 our $Test = Test::Builder->new;
 

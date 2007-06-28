@@ -1,13 +1,14 @@
 --- #YAML:1.0
 name:                Test-GreaterVersion
-version:             0.006
-abstract:            ~
+version:             0.007
+abstract:            Test if you incremented VERSION
 license:             perl
 generated_by:        ExtUtils::MakeMaker version 6.32
 distribution_type:   module
 requires:     
     CPAN:                          0
     CPAN::Version:                 0
+    Cwd:                           0
     File::Spec:                    0
     Test::Builder:                 0
 meta-spec:
