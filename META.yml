@@ -1,16 +1,17 @@
 --- #YAML:1.0
 name:                Test-GreaterVersion
-version:             0.005
+version:             0.006
 abstract:            ~
 license:             perl
 generated_by:        ExtUtils::MakeMaker version 6.32
 distribution_type:   module
 requires:     
     CPAN:                          0
+    CPAN::Version:                 0
     File::Spec:                    0
     Test::Builder:                 0
 meta-spec:
     url:     http://module-build.sourceforge.net/META-spec-v1.2.html
     version: 1.2
 author:
-    - Gregor Goldbach <goldbach@dfn-cert.de>
+    - Gregor Goldbach <glauschwuffel@nomaden.org>

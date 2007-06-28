@@ -1,3 +1,7 @@
+0.006
+-----
+Added CPAN::Version as a prerequisite to Makefile.PL
+
 0.005
 -----
 Version is now compared with the help of CPAN::Version.

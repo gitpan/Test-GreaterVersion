@@ -30,17 +30,17 @@ use strict;
 use warnings;
 
 use ExtUtils::MakeMaker;
-use Test::Builder;
 use CPAN;
 use CPAN::Version;
-use File::Spec;
 use Cwd;
+use File::Spec;
+use Test::Builder;
 
 use base qw(Exporter);
 our @EXPORT = qw(has_greater_version
   has_greater_version_than_cpan);
 
-our $VERSION = 0.005;
+our $VERSION = 0.006;
 
 our $Test = Test::Builder->new;
 
