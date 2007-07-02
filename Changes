@@ -1,13 +1,20 @@
+0.008
+-----
+Updated documentation.
+_get_installed_version() doesn't call CPAN::Shell::inst_version()
+anymore (which I thought I had removed in 0.007 anyway).
+
 0.007
 -----
 Added Cwd as a prerequisite to Makefile.PL.
-Teh description in the module list on CPAN, the abstract
+The description in the module list on CPAN, the abstract
 in the Makefile.PL and the one-line description in the POD
 are now the same.
 
 0.006
 -----
 Added CPAN::Version as a prerequisite to Makefile.PL
+Now uses CPAN::Version::vgt() for version number comparison.
 
 0.005
 -----
