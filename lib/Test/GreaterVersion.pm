@@ -47,6 +47,11 @@ The version numbers are compared calling
 C<CPAN::Version::vgt()>. See L<CPAN::Version> or L<version>
 for version number syntax. (Short: Both 1.00203 and v1.2.30 work.)  
 
+Please note that these test functions should not be put in normal
+test script below C<t/>. They will break the tests. These functions
+are to be put in some install script to check the versions
+automatically.
+
 =cut
 
 use strict;
@@ -63,7 +68,7 @@ use base qw(Exporter);
 our @EXPORT = qw(has_greater_version
   has_greater_version_than_cpan);
 
-our $VERSION = 0.008;
+our $VERSION = 0.009;
 
 our $Test = Test::Builder->new;
 
@@ -94,12 +99,12 @@ sub has_greater_version {
 
 	my $version_installed = _get_installed_version($module);
 	unless ($version_installed) {
-		return $Test->diag('Getting version from installed module failed');
+		return $Test->diag('Getting version of installed module failed');
 	}
 
 	my $version_from_lib = _get_version_from_lib($module);
 	unless ($version_from_lib) {
-		return $Test->diag('Getting version from module in lib failed');
+		return $Test->diag('Getting version of module in lib failed');
 	}
 
 	$Test->ok( CPAN::Version->vgt( $version_from_lib, $version_installed ),
@@ -170,14 +175,8 @@ sub _get_installed_version {
 	# Localize @INC so we won't affect others
 	local @INC = grep { $_ !~ /blib/ } @INC;
 
-	# taken from CPAN manpage
-	my $m = CPAN::Shell->expand( 'Module', $module );
-
-	# the module is not on CPAN or something broke
-	return $Test->diag("CPAN-version of '$module' not available")
-	  unless $m;
-
 	my $file = _module_to_file($module);
+
 	my $bestv;
 	for my $incdir (@INC) {
 		my $bfile = File::Spec->catfile( $incdir, $file );
@@ -215,12 +214,16 @@ sub _get_version_from_lib {
 
 	my $file = _module_to_file($module);
 
+	return $Test->diag("file '$file' doesn't exist")
+	  unless -f $file;
+
 	# try to get the version
-	my $version;
-	eval { $version = MM->parse_version($file); };
+	my $code = sub { MM->parse_version($file) };    
+	my ( $version, $error ) = $Test->_try($code);
 
 	# fail on errors
-	return $Test->diag("parse_version had errors: $@") if $@;
+	return $Test->diag("parse_version had errors: $@")
+	  if $error;
 
 	return $version;
 
@@ -254,9 +257,14 @@ failed somehow. Returns the version otherwise.
 sub _get_version_from_cpan {
 	my ($module) = @_;
 
+	# Turn off coloured output of the CPAN shell.
+	# This breaks the test/Harness/whatever.
+	CPAN::HandleConfig->load();
+	$CPAN::Config->{colorize_output}=0;
+
 	# taken from CPAN manpage
 	my $m = CPAN::Shell->expand( 'Module', $module );
-
+	
 	# the module is not on CPAN or something broke
 	return $Test->diag("CPAN-version of '$module' not available")
 	  unless $m;

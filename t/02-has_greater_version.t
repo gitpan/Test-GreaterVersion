@@ -20,7 +20,7 @@ can_ok($module, 'has_greater_version');
 # name of non-existent module
 {
     my $expected=0;
-    my $got=has_greater_version("I don't exist");
+    my $got=has_greater_version("I don't exist XX");
     is($got, $expected, 'name of non-existent module');
 }
 

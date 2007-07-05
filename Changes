@@ -1,3 +1,20 @@
+0.009
+-----
+
+Man, this is weird! Some tests (tests 4 in both test script
+02-...t and 03-...t break if the user has turned on colourized
+output in his CPAN shell. Basically this output is seen when
+running 'make test':
+
+ok 4 - name of non-existent module
+# Getting version from installed module failed
+ok 5 - name of module not in lib
+FAILED test 4
+
+That really is weird...
+
+Thanks to Andreas König and Slaven Rezic for testing!
+
 0.008
 -----
 Updated documentation.
