@@ -1,9 +1,9 @@
 This is the README file for Test::GreaterVersion, utilities
 for comparing versions of development, installed and CPAN versions
-of a module, by Gregor Goldbach <glauschwuffel@nomaden.org>.
+of a module, by Gregor Goldbach <ggoldbach@cpan.org>.
 
 There are two functions which are supposed to be used
-in your test suites to assure that you incremented your
+in your automated release suites to assure that you incremented your
 version before your install the module or upload it to CPAN.
 
 Test::GreaterVersion uses the standard perl module installation

@@ -1,3 +1,14 @@
+0.010
+------
+
+POD now has sections FUNCTIONS and INTERNAL FUNCTIONS.
+Corrected heading levels in POD.
+Module now returns true ;)
+Rewrite of has_greater_version() and
+has_greater_version_than_cpan(). POD updated.
+New tests for the internal functions.
+
+
 0.009
 -----
 

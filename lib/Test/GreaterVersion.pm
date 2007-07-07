@@ -13,7 +13,7 @@ Test::GreaterVersion -- Test if you incremented VERSION
 =head1 DESCRIPTION
 
 There are two functions which are supposed to be used
-in your test suites to assure that you incremented your
+in your automated release suites to assure that you incremented your
 version before your install the module or upload it to CPAN.
 
 C<has_greater_version> checks if your module source has a greater
@@ -48,9 +48,9 @@ C<CPAN::Version::vgt()>. See L<CPAN::Version> or L<version>
 for version number syntax. (Short: Both 1.00203 and v1.2.30 work.)  
 
 Please note that these test functions should not be put in normal
-test script below C<t/>. They will break the tests. These functions
-are to be put in some install script to check the versions
-automatically.
+test script below C<t/>. They will usually break the tests.
+These functions are to be put in some install script to check the
+versions automatically.
 
 =cut
 
@@ -68,7 +68,11 @@ use base qw(Exporter);
 our @EXPORT = qw(has_greater_version
   has_greater_version_than_cpan);
 
-our $VERSION = 0.009;
+our $VERSION = 0.010;
+
+# the development version of the module is expected
+# to be below this directory
+our $libdir = 'lib';
 
 our $Test = Test::Builder->new;
 
@@ -83,38 +87,79 @@ sub import {
 	$self->export_to_level( 1, $self, 'has_greater_version_than_cpan' );
 }
 
+=head1 FUNCTIONS
+
 =head2 has_greater_version ($module)
 
-Returns 1 if the version of your module in 'lib/' is greater
-than the version of the installed module, 0 otherwise.
+Returns 1 if your module in 'lib/' has a version and if
+it is greater than the version of the installed module,
+0 otherwise.
+
+1 is also returned if the module is not installed, i.e. your
+module is new.
+
+1 is also returned if the module is installed but has no version
+defined, i.e. your module in 'lib/' is a fix of this bug.
 
 =cut
 
 sub has_greater_version {
 	my ($module) = @_;
 
+	# fail if the module's name is missing
 	unless ($module) {
 		return $Test->diag("You didn't specify a module name");
 	}
 
-	my $version_installed = _get_installed_version($module);
-	unless ($version_installed) {
-		return $Test->diag('Getting version of installed module failed');
-	}
-
 	my $version_from_lib = _get_version_from_lib($module);
-	unless ($version_from_lib) {
-		return $Test->diag('Getting version of module in lib failed');
+	unless (defined $version_from_lib) {
+		# fail if module is not in lib
+		return $Test->diag('module is not in lib');
 	}
 
+	if ($version_from_lib eq 'undef') {
+		# fail if module has no version
+		return $Test->diag('module in lib has no version');
+	}
+
+	# so the module in lib has a version
+	$Test->diag('module is in lib and has version');
+
+	my $version_installed = _get_installed_version($module);
+	unless (defined $version_installed) {
+		$Test->diag('module is not installed');
+
+		# module doesn't seem to be installed, that's okay --
+		# it might be new
+		return 1;
+	}
+
+ 	if ($version_installed eq 'undef') {
+		$Test->diag('version of installed module is not defined');
+
+		# installed module seems to have no version, that's okay
+		# if the module in lib has
+		return 1;
+ 	}
+ 	
+ 	# so the installed module has a version, too
+	$Test->diag('module is installed and has version');
+ 	# let's compare them
+ 	
 	$Test->ok( CPAN::Version->vgt( $version_from_lib, $version_installed ),
 		"$module has greater version" );
 }
 
 =head2 has_greater_version_than_cpan ($module)
 
-Returns 1 if the version of your module in 'lib/' is greater
-than the version on CPAN, 0 otherwise.
+Returns 1 if your module in 'lib/' has a version and if
+it is greater than the module's version on CPAN,
+0 otherwise.
+
+1 is also returned if the module is there is no CPAN
+information available for your module, i.e. your
+module is new and will be the first release to CPAN or
+has no version defined.
 
 Due to the interface of the CPAN module there's currently
 no way to tell if the module is not on CPAN or if there
@@ -127,36 +172,63 @@ call of this function may seem to block the test. When
 you notice this behaviour it's likely that the CPAN shell is
 trying to get the latest module index which may take some time.
 
+Please note also that depending on your CPAN mirror the module
+information might be up to date or not.
+
 =cut
 
 sub has_greater_version_than_cpan {
 	my ($module) = @_;
 
+	# fail if the module's name is missing
 	unless ($module) {
 		return $Test->diag('You didn\'t specify a module name');
 	}
 
-	my $version_on_cpan = _get_version_from_cpan($module);
-	unless ($version_on_cpan) {
-		return $Test->diag("Getting version of '$module' on CPAN failed");
-	}
-
 	my $version_from_lib = _get_version_from_lib($module);
-	unless ($version_from_lib) {
-		return $Test->diag("Getting version of '$module' in lib failed");
+	unless (defined $version_from_lib) {
+		# fail if module is not in lib
+		return $Test->diag('module is not in lib');
 	}
 
-	$Test->ok( CPAN::Version->vgt( $version_from_lib, $version_on_cpan ),
+	if ($version_from_lib eq 'undef') {
+		# fail if module has no version
+		return $Test->diag('module in lib has no version');
+	}
+
+	# so the module in lib has a version
+	$Test->diag('module is in lib and has version');
+
+	my $cpan_version = _get_version_from_cpan($module);
+	unless ($cpan_version) {
+		$Test->diag('module is not on CPAN or has no version');
+
+		# module doesn't seem to be on CPAN, that's okay --
+		# it might be new. If it has no version that's okay,
+		# too -- we have one
+		return 1;
+	}
+ 	
+ 	# so the module on CPAN has a version, too
+	$Test->diag('module is on CPAN and has version');
+ 	# let's compare them
+
+	$Test->ok( CPAN::Version->vgt( $version_from_lib, $cpan_version ),
 		"$module has greater version than on CPAN" );
 }
+
+=head1 INTERNAL FUNCTIONS
+
+These are not to be called by anyone.
 
 =head2 _get_installed_version ($module)
 
 Gets the version of the installed module. The version
 information is found with the help of the CPAN module.
 
-Returns 0 if CPAN cannot find the module or it has no
-VERSION. Returns the version otherwise.
+Returns undef if the file doesn't exist.
+Returns 'undef' (yes, the string) if it has no version.
+Returns the version otherwise.
 
 We don't use CPAN::Shell::inst_version() since it doesn't
 remove blib before searching for the version and
@@ -204,21 +276,26 @@ to a file found under 'lib/'.
 
 C<MM->parse_version()> tries to find the version.
 
-Returns 0 if the module could not be loaded or has no
-VERSION. Returns the version otherwise.
+Returns undef if the file doesn't exist.
+Returns 'undef' (yes, the string) if it has no version.
+Returns the version otherwise.
 
 =cut
 
 sub _get_version_from_lib {
 	my $module = shift;
 
-	my $file = _module_to_file($module);
+	my $cwd  = getcwd();
+	my $file =
+	  File::Spec->catfile( $cwd, $libdir, _module_to_file($module));    
 
-	return $Test->diag("file '$file' doesn't exist")
-	  unless -f $file;
-
+	unless (-f $file) {
+		$Test->diag("file '$file' doesn't exist");
+		return;
+	}
+	
 	# try to get the version
-	my $code = sub { MM->parse_version($file) };    
+	my $code = sub { MM->parse_version($file) };
 	my ( $version, $error ) = $Test->_try($code);
 
 	# fail on errors
@@ -236,12 +313,10 @@ sub _module_to_file {
 	# get list of components
 	my @components = split( /::/, $module );
 
-	# cwd/lib/a/b.pm under UNI*
-	my $cwd = getcwd();
-	my $file = File::Spec->catfile( $cwd, 'lib', @components );
-	$file .= '.pm';
+	# a/b.pm under UNI* for 'a::b'
+	my $file=File::Spec->catfile(@components);
 
-	return $file;
+	return "$file.pm";
 }
 
 =head2 _get_version_from_cpan ($module)
@@ -249,7 +324,7 @@ sub _module_to_file {
 Gets the module's version as found on CPAN. The version
 information is found with the help of the CPAN module.
 
-Returns 0 if the module is not on CPAN or the CPAN module
+Returns undef if the module is not on CPAN or the CPAN module
 failed somehow. Returns the version otherwise.
 
 =cut
@@ -260,30 +335,41 @@ sub _get_version_from_cpan {
 	# Turn off coloured output of the CPAN shell.
 	# This breaks the test/Harness/whatever.
 	CPAN::HandleConfig->load();
-	$CPAN::Config->{colorize_output}=0;
+	$CPAN::Config->{colorize_output} = 0;
 
 	# taken from CPAN manpage
 	my $m = CPAN::Shell->expand( 'Module', $module );
-	
+
 	# the module is not on CPAN or something broke
-	return $Test->diag("CPAN-version of '$module' not available")
-	  unless $m;
+	unless ($m) {
+		$Test->diag("CPAN-version of '$module' not available");
+		return;
+	}
 
 	# there is a version on CPAN
 	return $m->cpan_version();
 }
 
-=head2 NOTES
+=head1 NOTES
 
 This module was inspired by brian d foy's talk
 'Managing Complexity with Module::Release' at the Nordic Perl
 Workshop in 2006.
 
-=head2 AUTHOR
+=head1 TODO
 
-Gregor Goldbach <glauschwuffel@nomaden.org>
+It might be nice that has_greater_version() and
+has_greater_version_than_cpan() wouldn't fail on equal versions
+if the modules source code is equal, too. Thanks to Slaven Rezic
+for that suggestion. That way the tests could be used in a normal
+test suite.
 
-=head2 SIMILAR MODULES
+
+=head1 AUTHOR
+
+Gregor Goldbach <ggoldbach@cpan.org>
+
+=head1 SIMILAR MODULES
 
 L<Test::Version> tests if there is a VERSION defined.
 
@@ -292,7 +378,7 @@ check all Perl modules in C<lib>.
 
 Neither of these compare versions.
 
-=head2 COPYRIGHT
+=head1 COPYRIGHT
 
 Copyright (c) 2007 by Gregor Goldbach. All rights reserved.
 
@@ -301,3 +387,4 @@ under the same terms as Perl itself.
 
 =cut
 
+1;

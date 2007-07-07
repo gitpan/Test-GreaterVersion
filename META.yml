@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Test-GreaterVersion
-version:             0.009
+version:             0.01
 abstract:            Test if you incremented VERSION
 license:             perl
 generated_by:        ExtUtils::MakeMaker version 6.36
